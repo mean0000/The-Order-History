@@ -27,6 +27,10 @@ namespace TheOther.Timeline
         [SerializeField] private Light sunLight;                    // 씬의 Directional Light
         [SerializeField] private float sunRotationSpeed = 2f;      // 태양 방향 전환 속도 (스무딩)
 
+        [Header("셰이더 머티리얼 참조 (_SunDirection 전달)")]
+        [SerializeField] private Material earthSurfaceMaterial;    // EarthSurface 셰이더 머티리얼
+        [SerializeField] private Material atmosphereMaterial;      // Atmosphere 셰이더 머티리얼
+
         [Header("스크롤 입력 설정")]
         [SerializeField] private float scrollThreshold = 1.0f;     // 앵커 이동 발동 임계값 (누적 스크롤)
         [SerializeField] private float scrollSensitivity = 3f;     // 스크롤 누적 배율
@@ -79,6 +83,7 @@ namespace TheOther.Timeline
 
         private void OnDisable()
         {
+            if (HistoryDataLoader.Instance == null) return;
             HistoryDataLoader.Instance.OnLoaded -= HandleDataLoaded;
         }
 
@@ -259,6 +264,13 @@ namespace TheOther.Timeline
 
             // Y축(수평)으로 공전 + 고정 X 기울기로 지구 기울기 표현 (약 30도)
             sunLight.transform.rotation = Quaternion.Euler(30f, angle, 0f);
+
+            // 셰이더에 _SunDirection 전달: 라이트 forward의 반대 방향 = "표면 → 태양" 벡터
+            Vector3 sunDir = -sunLight.transform.forward;
+            if (earthSurfaceMaterial != null)
+                earthSurfaceMaterial.SetVector("_SunDirection", sunDir);
+            if (atmosphereMaterial != null)
+                atmosphereMaterial.SetVector("_SunDirection", sunDir);
         }
 
         // ── 유틸리티 ──────────────────────────────────────────────────────

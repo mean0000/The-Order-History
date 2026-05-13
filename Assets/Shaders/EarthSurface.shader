@@ -158,6 +158,8 @@ Shader "TheOther/EarthSurface"
             // with a soft edge width of 'softness' per step.
             float CelQuantise(float lightValue, float steps, float softness)
             {
+                // Clamp steps to a valid integer count (float slider → floor)
+                steps = max(floor(steps), 1.0);
                 // Scale to step space, floor to nearest band, then smooth back.
                 float scaled    = lightValue * steps;
                 float floored   = floor(scaled);
@@ -272,9 +274,24 @@ Shader "TheOther/EarthSurface"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShadowCasterPass.hlsl"
 
-            // Minimal CBUFFER: ShadowCaster only needs the primary ST for UV transform.
+            // SRP Batcher requires ALL passes to declare an IDENTICAL UnityPerMaterial
+            // CBUFFER layout. Unused variables are declared but never read.
             CBUFFER_START(UnityPerMaterial)
                 float4 _DayTex_ST;
+                float4 _NightTex_ST;
+                float4 _SurfaceMaskTex_ST;
+                float3 _SunDirection;
+                float  _DayNightSoftness;
+                float4 _OceanColor;
+                float4 _LandColor;
+                float4 _OceanSpecColor;
+                float  _OceanSpecPower;
+                float  _NightEmissionIntensity;
+                float4 _AtmosphereColor;
+                float  _AtmospherePower;
+                float  _AtmosphereIntensity;
+                float  _CelSteps;
+                float  _CelSoftness;
             CBUFFER_END
             ENDHLSL
         }
@@ -295,9 +312,23 @@ Shader "TheOther/EarthSurface"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DepthOnlyPass.hlsl"
 
-            // Minimal CBUFFER: DepthOnly only needs the primary ST for UV transform.
+            // SRP Batcher: CBUFFER must match ForwardLit pass exactly.
             CBUFFER_START(UnityPerMaterial)
                 float4 _DayTex_ST;
+                float4 _NightTex_ST;
+                float4 _SurfaceMaskTex_ST;
+                float3 _SunDirection;
+                float  _DayNightSoftness;
+                float4 _OceanColor;
+                float4 _LandColor;
+                float4 _OceanSpecColor;
+                float  _OceanSpecPower;
+                float  _NightEmissionIntensity;
+                float4 _AtmosphereColor;
+                float  _AtmospherePower;
+                float  _AtmosphereIntensity;
+                float  _CelSteps;
+                float  _CelSoftness;
             CBUFFER_END
             ENDHLSL
         }
